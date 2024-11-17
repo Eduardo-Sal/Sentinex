@@ -28,7 +28,7 @@ class EmbeddedDeviceClient:
                 print("No device ID found.")
                 #will throw an error and the error is e so it tries and if it can't it'll except so it's sort of like a TRY and if can't it'll throw error
         except Exception as e:
-            print(f"❌ Error loading device ID: {str(e)}")
+            print(f"Error loading device ID: {str(e)}")
     
 
     #this function will update the sensor data in firebase which should be a file named sensor_data so to navigate devices->devicename->sensor_data->current_data <- that's where the data is stored
