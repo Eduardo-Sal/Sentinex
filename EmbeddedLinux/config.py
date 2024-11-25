@@ -3,16 +3,25 @@
 
 class Configuration:
     def __init__(self):
-    def load_system_config()
+        pass
 
-    def update_config()
+    def load_system_config(self):
+        pass
 
-    def get_entwork_settings()
+    def update_config(self):
+        pass
 
-    def camera_config()
+    def get_entwork_settings(self):
+        pass
 
-    def fire_base_credentials()
+    def camera_config(self):
+        pass
 
-    def robot_parameters()
+    def fire_base_credentials(self):
+        pass
 
-    def validate_config()
+    def robot_parameters(self):
+        pass
+
+    def validate_config(self):
+        pass

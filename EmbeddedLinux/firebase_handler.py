@@ -5,22 +5,34 @@
 
 class DeviceManager:
     def __init__(self):
-    def find_device()
+        pass
 
-    def register_new_device()
+    def find_device(self):
+        pass
 
-    def establish_connection()
+    def register_new_device(self):
+        pass
 
-    def push_camera_url()
+    def establish_connection(self):
+        pass
 
-    def update_device_status()
+    def push_camera_url(self):
+        pass
 
-    def send_alert()
+    def update_device_status(self):
+        pass
 
-    def receive_commands()
+    def send_alert(self):
+        pass
 
-    def handle_disconnect()
+    def receive_commands(self):
+        pass
 
-    def store_device_logs()
+    def handle_disconnect(self):
+        pass
 
-    def createJSON()
+    def store_device_logs(self):
+        pass
+    
+    def createJSON(self):
+        pass

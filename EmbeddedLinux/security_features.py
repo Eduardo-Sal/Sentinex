@@ -2,3 +2,4 @@
 
 class SecurityManager:
     def __init__(self):
+        pass
