@@ -3,33 +3,11 @@
 
 from fastapi import APIRouter, HTTPException
 import jwt
-import os
-import boto3
-from dotenv import load_dotenv
 from pydantic import BaseModel
 import pymysql
+from config import cognito, connect_db, app_client_id, s3_bucket,s3, aws_region, user_pool_id
 
-load_dotenv("credentials.env")
 auth_router = APIRouter()
-
-# Load AWS credentials using the environment file, we need s3 bucket, cognito, and mysql
-# AWS credentials   
-s3= boto3.client("s3")
-s3_bucket = os.getenv("S3_BUCKET","sentinexbucket")
-aws_region = os.getenv("AWS_REGION")
-user_pool_id = os.getenv("USER_POOL_ID")
-app_client_id = os.getenv("APP_CLIENT_ID")
-# Mysql credentials
-db_host = os.getenv("DB_HOST")
-db_user = os.getenv("DB_USER")
-db_pass = os.getenv("DB_PASS")
-db_name = os.getenv("DB_NAME")
-
-cognito = boto3.client("cognito-idp",region_name = aws_region)
-
-# Connects to MYSQL
-def connect_db():
-    return pymysql.connect(host=db_host,user=db_user,password=db_pass,database=db_name)
 
 # Use Pydantic model 
 # Sign up
@@ -217,5 +195,10 @@ def delete_user(request: DeleteAccount):
 # TODO later forgot password
 @auth_router.post("/forgot-password")
 def forgot_password(user: dict):
+     pass
+
+# TODO later logout
+@auth_router.post("/logout")
+def logout_user():
      pass
 
