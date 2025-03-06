@@ -9,8 +9,6 @@ from config import cognito, connect_db, app_client_id, s3_bucket, s3, aws_region
 
 images_router = APIRouter()
 
-# uploads screenshot to s3 and metadata in dynamo
-# uploads screenshot to s3 and metadata in dynamo
 def storeUserMedia(user_id:str, media):
     """
     Stores image into S3 bucket associated with User_ID
