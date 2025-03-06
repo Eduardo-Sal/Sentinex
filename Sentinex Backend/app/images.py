@@ -10,24 +10,38 @@ from config import cognito, connect_db, app_client_id, s3_bucket, s3, aws_region
 images_router = APIRouter()
 
 # uploads screenshot to s3 and metadata in dynamo
-def storeUserImage(user_id:str, image):
+# uploads screenshot to s3 and metadata in dynamo
+def storeUserMedia(user_id:str, media):
     """
     Stores image into S3 bucket associated with User_ID
     """
     try:
-        image_decoded = image.file.read()
+        # decode media bytes
+        media_decoded = media.file.read()
+        # determine content_type for s3 upload
+        content_type = media.content_type
 
-        filePath = f"{user_id}/screenshot/{image.filename}"
+        # Check if it's an image or video
+        if content_type.startswith("image/"):
+            folder = "screenshots"
+        elif content_type.startswith("video/"):
+            folder = "clips"
+        else:
+            print(f"Unsupported file type: {content_type}")
+            return
 
+
+        filePath = f"{user_id}/screenshot/{media.filename}"
         s3.put_object(
             Bucket = s3_bucket,
             Key = filePath,
-            Body = image_decoded,
-            ContentType = image.content_type
+            Body = media_decoded,
+            ContentType = content_type
         )
         print(f"Stored Image at s3://{s3_bucket}/{filePath}")
     except Exception as e:
         print(f"Failed to store image {e}")
+
 
 @images_router.post("/upload")
 def upload_screenshot(robot_id: str  = Form(...), image: UploadFile = File(...)):
@@ -56,7 +70,7 @@ def upload_screenshot(robot_id: str  = Form(...), image: UploadFile = File(...))
             return None
         user_uuid = user_uuid[0]
 
-        storeUserImage(user_uuid, image)
+        storeUserMedia(user_uuid, image)
 
         return {"message": "Image uploaded successfully", "user_uuid": user_uuid}
 
