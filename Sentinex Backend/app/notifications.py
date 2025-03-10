@@ -97,16 +97,8 @@ def delete_user_notification(notification_id: int):
     finally:
         cursor.close()
         conn.close()
-<<<<<<< HEAD
-    
-@notifications_router.delete("/users/{user_id}/notifications")
-def delete_all_user_notifications(user_id: int):
-    # connect to db
-    # search for specific notification using user_id
-    # delete ALL the notifications related to user_id using for loop
-    pass
-=======
-    
+        
+            
 @notifications_router.delete("/users/{user_id}/notifications")
 def delete_all_user_notifications(user_id: int):
     # connect to db
@@ -139,4 +131,3 @@ def delete_all_user_notifications(user_id: int):
         cursor.close()
         conn.close()
     
->>>>>>> notifications
