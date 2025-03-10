@@ -11,6 +11,7 @@ auth_router = APIRouter()
 
 # Use Pydantic model 
 # Sign up
+# TODO later add the pydantic email model to ensure no errors since it's still dynamic not static meaning it might give errors if email not valid format
 class UserCredentials(BaseModel):
     email: str
     password: str
