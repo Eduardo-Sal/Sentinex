@@ -97,6 +97,7 @@ def delete_user_notification(notification_id: int):
     finally:
         cursor.close()
         conn.close()
+<<<<<<< HEAD
     
 @notifications_router.delete("/users/{user_id}/notifications")
 def delete_all_user_notifications(user_id: int):
@@ -104,3 +105,38 @@ def delete_all_user_notifications(user_id: int):
     # search for specific notification using user_id
     # delete ALL the notifications related to user_id using for loop
     pass
+=======
+    
+@notifications_router.delete("/users/{user_id}/notifications")
+def delete_all_user_notifications(user_id: int):
+    # connect to db
+    conn = connect_db()
+    cursor = conn.cursor()
+    try:
+        # search for specific notification using user_id
+        query = "SELECT s3_filename FROM notifications WHERE user_id = %s"
+        cursor.execute(query,(user_id,))
+        results = cursor.fetchall()
+
+        # delete ALL the s3 images related to user_id using for loop
+        for row in results:
+            s3_filepath = row[0]
+            if s3_filepath:
+                try:
+                    s3.delete_object(Bucket=s3_bucket, Key= s3_filepath)
+                except Exception as e:
+                    print(f"{str(e)}")
+    
+        query = "DELETE FROM notifications where user_id = %s"
+        cursor.execute(query,(user_id,))
+        conn.commit()
+
+        return {"message": f"All notifications for user {user_id} deleted successfully"}
+    
+    except Exception as e:
+        return print(f"{str(e)}")
+    finally:
+        cursor.close()
+        conn.close()
+    
+>>>>>>> notifications
