@@ -45,7 +45,7 @@ def get_user_notification(user_id: int):
                 presigned_url = get_presigned_url_v2(s3_filename)
             print(f"{notification_id}")
             notifications.append({
-                "id:": notification_id,
+                "id": notification_id,
                 "s3_filename": s3_filename,
                 "file_url": presigned_url,
                 "timestamp": timestamp,

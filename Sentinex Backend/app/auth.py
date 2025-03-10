@@ -111,7 +111,7 @@ def verify_email(data: ConfirmEmail):
           )
           return {"Email Verified!"}
      except Exception as e:
-          raise HTTPException(status_code=400, details=f"Failed to verify email: {str(e)}")
+          raise HTTPException(status_code=400, detail=f"Failed to verify email: {str(e)}")
 
 @auth_router.post("/login")
 def login_user(user: UserCredentials):
@@ -133,7 +133,7 @@ def login_user(user: UserCredentials):
               "expires_in": auth_result["ExpiresIn"]
          }
     except Exception as e:
-         raise HTTPException(status_code=400, details=f"Failed to login: {str(e)}")
+         raise HTTPException(status_code=400, detail=f"Failed to login: {str(e)}")
 
 @auth_router.delete("/delete-account")
 def delete_user(request: DeleteAccount):
@@ -190,7 +190,7 @@ def delete_user(request: DeleteAccount):
          return {"Account successfully deleted"}
     
     except Exception as e:
-         raise HTTPException(status_code=400, details = f"Failed to delete user account: {str(e)}")
+         raise HTTPException(status_code=400, detail = f"Failed to delete user account: {str(e)}")
          
 
 # TODO later forgot password
