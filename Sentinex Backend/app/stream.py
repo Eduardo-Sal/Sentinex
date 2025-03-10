@@ -5,6 +5,7 @@ from fastapi import APIRouter, HTTPException
 import boto3
 from config import AWS_REGION
 
+
 router = APIRouter()
 kinesis_client = boto3.client("kinesis_video_stream", region_name=AWS_REGION)
 
@@ -18,3 +19,9 @@ def start_stream(robot_id: str, stream_type: str):
 @router.post("/{robot_id}/stop_stream")
 def stop_stream(robot_id: str):
     pass
+
+@router.get("/getstream/{robot_id}")
+def getStreamURL(stream_url: str) -> str:
+    '''retrieves the steam_url from kinesis'''
+    pass
+

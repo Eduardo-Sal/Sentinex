@@ -98,7 +98,7 @@ def register_user(user: UserCredentials):
     
 
 @auth_router.post("/verify-email")
-def verify_user_email(data: ConfirmEmail):
+def verify_email(data: ConfirmEmail):
      '''
      Verify user email using cognito
      '''
@@ -123,7 +123,7 @@ def login_user(user: UserCredentials):
                    "USERNAME": user.email,
                    "PASSWORD": user.password
               }
-         )
+     )
          auth_result = response["AuthenticationResult"]
          return {
               "access_token":auth_result["AccessToken"],
@@ -194,9 +194,17 @@ def delete_user(request: DeleteAccount):
 
 # TODO later forgot password
 @auth_router.post("/forgot-password")
-def forgot_password(user: dict):
+def request_password_reset(user: dict):
      pass
 
+@auth_router.post("/reset-password")
+def reset_password(user: dict):
+     pass
+
+@auth_router.post("/refresh-token")
+def refresh_access_token(user: dict):
+     pass
+     
 # TODO later logout
 @auth_router.post("/logout")
 def logout_user():

@@ -2,6 +2,7 @@
 # handles screenshot sent from robot & metadata
 
 from fastapi import APIRouter, UploadFile,File, Form, HTTPException
+import uuid
 from datetime import datetime
 from config import connect_db, s3_bucket, s3
 from pydantic import BaseModel
@@ -25,8 +26,10 @@ def storeUserMedia(user_id:str, media):
         # Check if it's an image or video
         if content_type.startswith("image/"):
             folder = "screenshot"
+            mediaType = "image"
         elif content_type.startswith("video/"):
             folder = "clips"
+            mediaType = "clip"
         else:
             print(f"Unsupported file type: {content_type}")
             return
@@ -40,10 +43,22 @@ def storeUserMedia(user_id:str, media):
             ContentType = content_type
         )
         print(f"Stored Image at s3://{s3_bucket}/{filePath}")
+        return (f"{filePath}",mediaType)
     except Exception as e:
         print(f"Failed to store media {e}")
 
-
+# TODO implement LRU caching to avoid duplicate calls for generating the same
+# pre-signed url
+def get_presigned_url_v2(file_path: str):
+    try:
+        url = s3.generate_presigned_url(
+            ClientMethod = 'get_object',
+            Params = {'Bucket': s3_bucket, 'Key': file_path},
+            ExpiresIn = 600
+        )
+        return url
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Error generating pre-signed URL")
 
 @images_router.get("/media")
 def get_presigned_url(request: imageGet):
@@ -69,10 +84,14 @@ def get_presigned_url(request: imageGet):
             except s3.exceptions.ClientError:
                 continue
 
-        raise HTTPException(status_code=404,detail="aint here")
+        raise HTTPException(status_code=500,detail="aint here")
     except Exception as e:
         print(f"{e}")
+    finally:
+        cursor.close()
+        conn.close()
 
+# TODO think about confident score do we also store it?
 @images_router.post("/upload")
 def upload_screenshot(robot_id: str  = Form(...), image: UploadFile = File(...)):
     conn = connect_db()
@@ -100,12 +119,26 @@ def upload_screenshot(robot_id: str  = Form(...), image: UploadFile = File(...))
             return None
         user_uuid = user_uuid[0]
 
-        storeUserMedia(user_uuid, image)
+        s3_filepath, mediatype = storeUserMedia(user_uuid, image)
+        print(s3_filepath)
+        print(mediatype)
 
-        return {"message": "Image uploaded successfully", "user_uuid": user_uuid}
+        if not s3_filepath or not mediatype:
+            print("S3 upload failed. Skipping database insert.")
+            return {"error": "Failed to upload media to S3"}
+        
+        cursor.execute(
+        "INSERT INTO notifications (user_id, robot_id, s3_filename, media_type) VALUES (%s, %s, %s, %s)",
+        (user_id, robot_id, s3_filepath, mediatype))
+        conn.commit()
+
+        return {"message": "Image uploaded to S3 bucket and Notification Table successfully", "user_uuid": user_uuid}
 
     except Exception as e:
         print(f"Failed to upload image {e}")
+    finally:
+        conn.close()
+        cursor.close()
     
 
 

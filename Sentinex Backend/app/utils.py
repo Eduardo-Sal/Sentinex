@@ -1,4 +1,4 @@
-# Handles utility functions like S3 and JWT validation
+# Handles utility functions like S3 and JWT validation 
 
 import jwt
 import boto3
