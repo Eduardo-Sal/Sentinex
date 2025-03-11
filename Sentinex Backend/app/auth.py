@@ -3,7 +3,7 @@
 
 from fastapi import APIRouter, HTTPException
 import jwt
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr, SecretStr
 import pymysql
 from config import cognito, connect_db, app_client_id, s3_bucket,s3, aws_region, user_pool_id
 
@@ -13,11 +13,11 @@ auth_router = APIRouter()
 # Sign up
 # TODO later add the pydantic email model to ensure no errors since it's still dynamic not static meaning it might give errors if email not valid format
 class UserCredentials(BaseModel):
-    email: str
-    password: str
+    email: EmailStr
+    password: SecretStr
 # Confirm Email
 class ConfirmEmail(BaseModel):
-     email: str
+     email: EmailStr
      code: str
 # Delete account
 class DeleteAccount(BaseModel):
@@ -69,10 +69,11 @@ def register_user(user: UserCredentials):
     Registers account using cognito, mysql, and create S3 bucket associated with cognito UUID bucket
     '''
     try:
+        raw_pass = user.password.get_secret_value()
         response = cognito.sign_up(
             ClientId = app_client_id,
             Username = user.email,
-            Password = user.password,
+            Password = raw_pass,
             UserAttributes=[{"Name": "email", "Value": user.email}],
         )
 
@@ -117,12 +118,13 @@ def verify_email(data: ConfirmEmail):
 def login_user(user: UserCredentials):
     '''logs user in using cognito authentication function'''
     try:
+         raw_pass = user.password.get_secret_value()
          response = cognito.initiate_auth(
               ClientId = app_client_id,
               AuthFlow = "USER_PASSWORD_AUTH",
               AuthParameters = {
                    "USERNAME": user.email,
-                   "PASSWORD": user.password
+                   "PASSWORD": raw_pass
               }
      )
          auth_result = response["AuthenticationResult"]
