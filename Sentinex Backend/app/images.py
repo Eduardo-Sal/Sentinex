@@ -122,14 +122,15 @@ def upload_screenshot(robot_id: str  = Form(...), image: UploadFile = File(...))
         s3_filepath, mediatype = storeUserMedia(user_uuid, image)
         print(s3_filepath)
         print(mediatype)
+        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
 
         if not s3_filepath or not mediatype:
             print("S3 upload failed. Skipping database insert.")
             return {"error": "Failed to upload media to S3"}
         
         cursor.execute(
-        "INSERT INTO notifications (user_id, robot_id, s3_filename, media_type) VALUES (%s, %s, %s, %s)",
-        (user_id, robot_id, s3_filepath, mediatype))
+        "INSERT INTO notifications (user_id, robot_id, s3_filename,timestamp, media_type) VALUES (%s, %s, %s, %s,%s)",
+        (user_id, robot_id, s3_filepath, timestamp ,mediatype))
         conn.commit()
 
         return {"message": "Image uploaded to S3 bucket and Notification Table successfully", "user_uuid": user_uuid}
