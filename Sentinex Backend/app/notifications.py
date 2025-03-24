@@ -13,14 +13,21 @@ notifications_router = APIRouter()
 
 # optimize later with pagination or filtering
 # TODO add clips support later
-@notifications_router.get("/user/{user_id}")
-def get_user_notification(user_id: int):
+@notifications_router.get("/user/{user_uuid}")
+def get_user_notification(user_uuid: str):
     # connect to db
     conn = connect_db()
     cursor = conn.cursor()
 
     # user user_id as the filter
     try:
+        query = "SELECT id FROM users WHERE cognito_sub = %s"
+        cursor.execute(query, (user_uuid,))
+        data = cursor.fetchall()
+
+        user_id = data[0][0]  # extract id
+        print(user_id)
+
         query = """
             SELECT notification_id, s3_filename, timestamp, media_type 
             FROM notifications 
@@ -54,6 +61,7 @@ def get_user_notification(user_id: int):
 
         return notifications
     except Exception as e:
+        print(f"str{e}")
         raise HTTPException(status_code=500, detail = "error fetching notifications")
     finally:
         cursor.close()
@@ -99,13 +107,19 @@ def delete_user_notification(notification_id: int):
         conn.close()
         
             
-@notifications_router.delete("/users/{user_id}/notifications")
-def delete_all_user_notifications(user_id: int):
+@notifications_router.delete("/users/{user_uuid}/notifications")
+def delete_all_user_notifications(user_uuid: str):
     # connect to db
     conn = connect_db()
     cursor = conn.cursor()
     try:
         # search for specific notification using user_id
+        query = "select id FROM users WHERE cognito_sub = %s"
+        cursor.execute(query,(user_uuid))
+        data = cursor.fetchall()
+
+        user_id = data[0][0]
+        
         query = "SELECT s3_filename FROM notifications WHERE user_id = %s"
         cursor.execute(query,(user_id,))
         results = cursor.fetchall()

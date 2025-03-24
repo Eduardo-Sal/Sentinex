@@ -1,1 +1,7 @@
 *.env
+__pycache__
+tests
+__init__.py
+.pytest_cache
+testingVideo
+Sentinex Backend/app/test.py

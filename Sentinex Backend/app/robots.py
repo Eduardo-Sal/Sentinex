@@ -7,7 +7,7 @@ from pydantic import BaseModel
 from config import cognito, connect_db, app_client_id, s3_bucket, s3, aws_region, user_pool_id
 
 class DevicePair(BaseModel):
-    user_id: str
+    user_uuid: str
     robot_id: str
 
 class RobotRegistration(BaseModel):
@@ -57,7 +57,7 @@ def pair_robot(data: DevicePair):
     cursor = conn.cursor()
     try:
         # Get user_id from cognito_sub
-        cursor.execute("SELECT id FROM users WHERE cognito_sub = %s;", (data.user_id,))
+        cursor.execute("SELECT id FROM users WHERE cognito_sub = %s;", (data.user_uuid,))
         user = cursor.fetchone()
         if not user:
             raise HTTPException(status_code=400, detail="User does not exist")
