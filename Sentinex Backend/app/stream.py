@@ -12,6 +12,32 @@ stream_router = APIRouter()
 # starts the stream for the robot
 # Returned pre-signed url for webrtc stream which also initializes handshake
 # make sure to handle errors in the frontend side 
+@stream_router.get("/streamUrl/{user_uuid}")
+def get_channel_arn(user_uuid:str):
+    conn = connect_db()
+    cursor = conn.cursor()
+    try:
+        # Get robot ID with cognito UUID from AWS
+        cursor.execute("""
+            SELECT r.channel_arn
+            FROM users u
+            JOIN robots r ON u.id = r.user_id
+            WHERE u.cognito_sub = %s;
+        """,(user_uuid,))
+        result = cursor.fetchone()
+
+        return {
+            "channel_arn" : result[0]
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch stream info: {str(e)}")
+
+    finally:
+        cursor.close()
+        conn.close()
+
+# OUTDATED
 @stream_router.get("/stream-url/{user_uuid}")
 def get_robot_stream_url(user_uuid: str):
     conn = connect_db()
