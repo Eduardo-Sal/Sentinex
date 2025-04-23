@@ -21,6 +21,7 @@ db_name = os.getenv("DB_NAME")
 
 # AWS Clients
 s3 = boto3.client("s3")
+kinesisvideo = boto3.client("kinesisvideo", region_name=aws_region)
 cognito = boto3.client("cognito-idp", region_name=aws_region)
 
 # Function to connect to MySQL

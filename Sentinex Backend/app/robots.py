@@ -4,7 +4,7 @@
 from fastapi import APIRouter, HTTPException
 from dotenv import load_dotenv
 from pydantic import BaseModel
-from config import cognito, connect_db, app_client_id, s3_bucket, s3, aws_region, user_pool_id
+from config import cognito, connect_db, app_client_id, s3_bucket, s3, aws_region, user_pool_id, kinesisvideo
 
 class DevicePair(BaseModel):
     user_uuid: str
@@ -18,34 +18,43 @@ robots_router = APIRouter()
 @robots_router.post("/register")
 def register_robot(data: RobotRegistration):
     '''
-    Registers robot to a user
+    Registers robot and creates a Kinesis signaling channel per robot
     '''
-    # connect to db
     conn = connect_db()
     cursor = conn.cursor()
     try:
-    # check if it exists
-        cursor.execute("SELECT id from robots WHERE uuid = %s;", (data.robot_uuid,))
+        cursor.execute("SELECT id, channel_arn FROM robots WHERE uuid = %s;", (data.robot_uuid,))
         existing_robot = cursor.fetchone()
 
         if existing_robot:
-            return {"robot_id": existing_robot[0]}
+            return {"robot_id": existing_robot[0], "channel_arn": existing_robot[1]}
 
-    # if it doesn't add it 
-        cursor.execute("INSERT into robots (uuid, robot_name) VALUES (%s,%s);",(data.robot_uuid, f"robot-{data.robot_uuid}"))
+        # Create Kinesis signaling channel
+        channel_name = f"robot-{data.robot_uuid}"
+        response = kinesisvideo.create_signaling_channel(
+            ChannelName=channel_name,
+            ChannelType="SINGLE_MASTER"
+        )
+        channel_arn = response['ResourceARN']
+
+        # Insert into DB
+        cursor.execute(
+            "INSERT INTO robots (uuid, robot_name, channel_arn) VALUES (%s, %s, %s);",
+            (data.robot_uuid, channel_name, channel_arn)
+        )
         conn.commit()
 
-        cursor.execute("SELECT id from robots WHERE uuid = %s;", (data.robot_uuid))
+        cursor.execute("SELECT id FROM robots WHERE uuid = %s;", (data.robot_uuid,))
         new_robot_id = cursor.fetchone()[0]
 
         if not new_robot_id:
-            raise HTTPException(status_code = 400, detail = "Failed to retrieve registered robot")
-        
-        return{"robot_id": new_robot_id}
-    
-    # get the robot_id and return it to the esp32
+            raise HTTPException(status_code=400, detail="Failed to retrieve registered robot")
+
+        return {"robot_id": new_robot_id, "channel_arn": channel_arn}
+
     except Exception as e:
-        return HTTPException(status_code=400, detail=f"Failed to register {str(e)}")
+        raise HTTPException(status_code=400, detail=f"Failed to register {str(e)}")
+
     finally:
         cursor.close()
         conn.close()
