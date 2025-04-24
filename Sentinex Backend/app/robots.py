@@ -12,6 +12,9 @@ class DevicePair(BaseModel):
     user_uuid: str
     robot_id: str
 
+class DeviceUnpair(BaseModel):
+    user_uuid: str
+
 class RobotRegistration(BaseModel):
     robot_uuid: str
 
@@ -173,8 +176,37 @@ def pair_robot(data: DevicePair):
         conn.close()
 
 @robots_router.post("/unpair")
-def unpair_robot(data: DevicePair):
-    pass
+def unpair_robot(data: DeviceUnpair):
+    '''Unpairs robot from requested user uuid'''
+    conn = connect_db()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT id FROM users WHERE cognito_sub = %s;", (data.user_uuid,))
+        user = cursor.fetchone()
+
+        # If user doesn't exist raise error
+        if not user:
+            raise HTTPException(status_code=400, detail="User does not exist")
+        
+        user_id = user[0]
+
+        # Check if robot exists and retrieve robot_id for unpairing
+        cursor.execute("""
+            UPDATE robots
+            SET user_id = NULL
+            WHERE user_id = %s;
+        """, (user_id,))
+        conn.commit()
+
+        return {"message": "Robot unpaired successfully", "user_id": user_id}
+
+    except Exception as e:
+        conn.rollback()
+        raise HTTPException(status_code=400, detail=f"Failed to unpair {e}")
+    finally:
+        cursor.close()
+        conn.close()
+
 
 @robots_router.post("/qrcode/{robot_id}")
 def generate_qr_code(robot_id: str):
