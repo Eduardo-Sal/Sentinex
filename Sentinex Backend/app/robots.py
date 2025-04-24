@@ -5,6 +5,8 @@ from fastapi import APIRouter, HTTPException
 from dotenv import load_dotenv
 from pydantic import BaseModel
 from config import cognito, connect_db, app_client_id, s3_bucket, s3, aws_region, user_pool_id, kinesisvideo
+from typing import Optional
+from datetime import datetime, timedelta
 
 class DevicePair(BaseModel):
     user_uuid: str
@@ -13,8 +15,57 @@ class DevicePair(BaseModel):
 class RobotRegistration(BaseModel):
     robot_uuid: str
 
+class PairingRequest(BaseModel):
+    pairing_enabled: bool
+    pairing_duration_minutes: Optional[int] = 3 # defaults to 3 minutes if not specified
+
 robots_router = APIRouter()
 
+@robots_router.patch("/{robot_id}/discovery")
+def update_pairing(robot_id: int, payload: PairingRequest):
+    '''
+    Enables discovery mode for pairing on robot sets 
+    '''
+    try:
+        conn = connect_db()
+        cursor = conn.cursor()
+
+        if payload.pairing_enabled:
+            expires_at = datetime.utcnow() + timedelta(minutes = payload.pairing_duration_minutes)
+            cursor.execute(
+                """
+                UPDATE robots
+                SET pairing_enabled = %s,
+                    pairing_expires_at = %s
+                WHERE id = %s;
+                """,
+                (1, expires_at, robot_id)
+            )
+        else:
+            cursor.execute(
+            """
+            UPDATE robots
+            SET pairing_enabled = %s,
+                pairing_expires_at = NULL
+            WHERE id = %s;
+            """,
+            (0, robot_id)
+            )
+        conn.commit()
+        return {
+            "success": True,
+            "robot_id": robot_id,
+            "pairing_enabled:" : payload.pairing_enabled
+            }
+
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Failed to enable discovery mode {str(e)}")
+
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
 @robots_router.post("/register")
 def register_robot(data: RobotRegistration):
     '''
@@ -107,25 +158,7 @@ def pair_robot(data: DevicePair):
 def unpair_robot(data: DevicePair):
     pass
 
-
 @robots_router.post("/qrcode/{robot_id}")
 def generate_qr_code(robot_id: str):
     '''Generates a QR code for the robot to be scanned'''
     return {"robot_id": robot_id, "qrcode": "https://example.com/qrcode.png"}
-
-# To be tested later
-@robots_router.post("/{robot_id}/move")
-def move_robot(robot_id: str, command: dict):
-    '''sends commands to the robot to move from the mobile app'''
-    return {"robot_id": robot_id, "command": command}
-
-
-# Test with MQTT both start_control and stop_control
-@robots_router.get("/start-control/{robot_id}")
-def start_control(robot_id: str):
-    '''Starts the control of the robot, essentially starts a websocket'''
-    pass
-
-@robots_router.post("/stop-control/{robot_id}")
-def stop_control(robot_id: str):
-    '''stops the control of the robot, so turns off the websocket'''
