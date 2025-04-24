@@ -21,7 +21,7 @@ class PairingRequest(BaseModel):
 
 robots_router = APIRouter()
 
-@robots_router.patch("/{robot_id}/discovery")
+@robots_router.patch("/{robot_id}/discovery-mode")
 def update_pairing(robot_id: int, payload: PairingRequest):
     '''
     Enables discovery mode for pairing on robot sets 
@@ -66,6 +66,7 @@ def update_pairing(robot_id: int, payload: PairingRequest):
             cursor.close()
         if conn:
             conn.close()
+
 @robots_router.post("/register")
 def register_robot(data: RobotRegistration):
     '''
@@ -124,27 +125,44 @@ def pair_robot(data: DevicePair):
 
         user_id = user[0]
 
-        # Check if the robot exists using its unique robot_id
-        cursor.execute("SELECT id, user_id FROM robots WHERE id = %s;", (data.robot_id,))
+        # Check if the robot exists and retrieve pairing status
+        cursor.execute("""
+            SELECT id, user_id, pairing_enabled, pairing_expires_at 
+            FROM robots 
+            WHERE id = %s;
+        """, (data.robot_id,))
         robot = cursor.fetchone()
 
-        # If the robot is not found, return an error (must be pre-registered)
         if not robot:
             raise HTTPException(status_code=404, detail="Robot not found. Ensure it is registered first.")
 
-        robot_id, existing_user_id = robot
+        robot_id, existing_user_id, pairing_enabled, pairing_expires_at = robot
 
-        # Check if the robot is already paired with another user
+        # Check pairing enabled flag
+        if not pairing_enabled:
+            raise HTTPException(status_code=403, detail="Pairing not enabled on this robot.")
+
+        # Check expiration
+        if pairing_expires_at and datetime.utcnow() > pairing_expires_at:
+            raise HTTPException(status_code=403, detail="Pairing window expired. Press button again to re-enable.")
+
+        # Check if robot is already paired with a different user
         if existing_user_id and existing_user_id != user_id:
             raise HTTPException(status_code=400, detail="Robot is already paired with another user. Unpair first.")
 
-        # Update robot pairing if unpaired
-        if existing_user_id is None:
-            cursor.execute("UPDATE robots SET user_id = %s WHERE id = %s;", (user_id, data.robot_id))
-            conn.commit()
-            return {"message": "Robot successfully paired.", "robot_id": data.robot_id, "user_id": user_id}
+        # Pair the robot to the user
+        cursor.execute("""
+            UPDATE robots 
+            SET user_id = %s, pairing_enabled = 0, pairing_expires_at = NULL 
+            WHERE id = %s;
+        """, (user_id, robot_id))
+        conn.commit()
 
-        return {"message": "Robot is already paired with this user.", "robot_id": data.robot_id, "user_id": user_id}
+        return {
+            "message": "Robot successfully paired.",
+            "robot_id": robot_id,
+            "user_id": user_id
+        }
 
     except Exception as e:
         conn.rollback()
