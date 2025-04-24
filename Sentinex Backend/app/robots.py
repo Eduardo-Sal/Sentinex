@@ -2,21 +2,20 @@
 # Optimize later by including HTTPException and depends
 
 from fastapi import APIRouter, HTTPException
-from dotenv import load_dotenv
-from pydantic import BaseModel
-from config import cognito, connect_db, app_client_id, s3_bucket, s3, aws_region, user_pool_id, kinesisvideo
+from pydantic import BaseModel, constr, conint
+from config import  connect_db, kinesisvideo
 from typing import Optional
 from datetime import datetime, timedelta
 
 class DevicePair(BaseModel):
-    user_uuid: str
-    robot_id: str
+    user_uuid: constr(min_length=36, max_length=36)
+    robot_id: conint(gt=0)
 
 class DeviceUnpair(BaseModel):
-    user_uuid: str
+    user_uuid: constr(min_length=36, max_length=36)
 
 class RobotRegistration(BaseModel):
-    robot_uuid: str
+    robot_uuid: constr(min_length=36, max_length=36)
 
 class PairingRequest(BaseModel):
     pairing_enabled: bool
@@ -207,8 +206,3 @@ def unpair_robot(data: DeviceUnpair):
         cursor.close()
         conn.close()
 
-
-@robots_router.post("/qrcode/{robot_id}")
-def generate_qr_code(robot_id: str):
-    '''Generates a QR code for the robot to be scanned'''
-    return {"robot_id": robot_id, "qrcode": "https://example.com/qrcode.png"}
