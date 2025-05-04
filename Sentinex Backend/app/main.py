@@ -26,7 +26,7 @@ app.include_router(robots_router, prefix="/api/robots")
 app.include_router(images_router, prefix="/api/images")
 app.include_router(clips_router, prefix="/api/clips")
 app.include_router(notifications_router, prefix="/api/notifications")
-app.include_router(aws_router, prefix="/api/stream")
+app.include_router(aws_router, prefix="/api/aws")
 app.include_router(users_router, prefix= "/api/users")
 
 # Run the FastAPI server
