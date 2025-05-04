@@ -7,12 +7,12 @@ from config import aws_region, kinesisvideo, connect_db
 import traceback
 
 
-stream_router = APIRouter()
+aws_router = APIRouter()
 
 # starts the stream for the robot
 # Returned pre-signed url for webrtc stream which also initializes handshake
 # make sure to handle errors in the frontend side 
-@stream_router.get("/streamUrl/{user_uuid}")
+@aws_router.get("/streamUrl/{user_uuid}")
 def get_channel_arn(user_uuid:str):
     conn = connect_db()
     cursor = conn.cursor()
@@ -38,7 +38,7 @@ def get_channel_arn(user_uuid:str):
         conn.close()
 
 # OUTDATED
-@stream_router.get("/stream-url/{user_uuid}")
+@aws_router.get("/stream-url/{user_uuid}")
 def get_robot_stream_url(user_uuid: str):
     conn = connect_db()
     cursor = conn.cursor()
