@@ -7,6 +7,7 @@ from clips import clips_router
 from notifications import notifications_router
 from aws_metadata import aws_router
 from users import users_router
+from sensor import sensor_router
 #import uvicorn
 
 # Initialize the FastAPI app
@@ -28,6 +29,7 @@ app.include_router(clips_router, prefix="/api/clips")
 app.include_router(notifications_router, prefix="/api/notifications")
 app.include_router(aws_router, prefix="/api/aws")
 app.include_router(users_router, prefix= "/api/users")
+app.include_router(sensor_router,prefix="/api/sensor")
 
 # Run the FastAPI server
 if __name__ == "__main__":
