@@ -6,6 +6,11 @@ from pydantic import BaseModel, constr, conint
 from config import  connect_db, kinesisvideo
 from typing import Optional
 from datetime import datetime, timedelta
+import json
+from datetime import datetime
+
+class TemperaturePayload(BaseModel):
+    temperature: float
 
 class DevicePair(BaseModel):
     user_uuid: constr(min_length=36, max_length=36)
@@ -206,3 +211,57 @@ def unpair_robot(data: DeviceUnpair):
         cursor.close()
         conn.close()
 
+@robots_router.post("/{robot_id}/temperature")
+def update_temperature(robot_id: int, payload: TemperaturePayload):
+    '''
+    Adds a (timestamp, temperature) tuple to the robot in circular fashion using temperature_index.
+    Backend generates the timestamp.
+    '''
+    conn = connect_db()
+    cursor = conn.cursor()
+    try:
+        # Get current readings + index
+        cursor.execute(
+            "SELECT temperature_readings, temperature_index FROM robots WHERE id = %s;",
+            (robot_id,)
+        )
+        result = cursor.fetchone()
+        if not result:
+            raise HTTPException(status_code=404, detail="Robot not found")
+
+        readings = json.loads(result[0] or "[]")
+        index = result[1] or 0
+
+        # Create timestamp
+        timestamp = datetime.utcnow().isoformat() + "Z"
+
+        # Expand array if not full
+        if len(readings) < 12:
+            readings.append([timestamp, payload.temperature])
+        else:
+            # Overwrite at index
+            readings[index % 12] = [timestamp, payload.temperature]
+
+        # Update index
+        new_index = (index + 1) % 12
+
+        # Save back to DB
+        cursor.execute(
+            "UPDATE robots SET temperature_readings = %s, temperature_index = %s WHERE id = %s;",
+            (json.dumps(readings), new_index, robot_id)
+        )
+        conn.commit()
+
+        return {
+            "success": True,
+            "robot_id": robot_id,
+            "updated_readings": readings,
+            "next_index": new_index
+        }
+
+    except Exception as e:
+        conn.rollback()
+        raise HTTPException(status_code=400, detail=f"Failed to update temperature: {str(e)}")
+    finally:
+        cursor.close()
+        conn.close()
