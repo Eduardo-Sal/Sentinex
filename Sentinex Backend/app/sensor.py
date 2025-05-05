@@ -106,18 +106,19 @@ def get_temperature_data(robot_id: int):
 @sensor_router.post("/{robot_id}/sound")
 def update_sound_anomaly(robot_id: int, payload: SoundPayload):
     '''
-    Adds a (timestamp, db_level) tuple to sound_anomalies column.
+    Adds a (timestamp, db_level) tuple to sound_anomalies column and inserts a sound notification.
     '''
     conn = connect_db()
     cursor = conn.cursor()
     try:
         # Get current sound anomalies
-        cursor.execute("SELECT sound_anomalies FROM robots WHERE id = %s;", (robot_id,))
+        cursor.execute("SELECT sound_anomalies, user_id FROM robots WHERE id = %s;", (robot_id,))
         result = cursor.fetchone()
         if not result:
             raise HTTPException(status_code=404, detail="Robot not found")
 
         anomalies = json.loads(result[0] or "[]")
+        user_id = result[1]
 
         # Append new anomaly with timestamp
         timestamp = datetime.utcnow().isoformat() + "Z"
@@ -130,13 +131,13 @@ def update_sound_anomaly(robot_id: int, payload: SoundPayload):
         )
         conn.commit()
 
-        # Optionally insert a notification
+        # Insert notification (s3_filename = '', media_type = 'sound', event_type = 'sound_anomaly')
         cursor.execute(
             """
-            INSERT INTO notifications (user_id, robot_id, s3_filename, media_type)
-            SELECT user_id, %s, %s, %s FROM robots WHERE id = %s;
+            INSERT INTO notifications (user_id, robot_id, s3_filename, media_type, event_type)
+            VALUES (%s, %s, %s, %s, %s);
             """,
-            (robot_id, 'sound_anomaly', 'sound', robot_id)
+            (user_id, robot_id, '', 'sound', 'sound_anomaly')
         )
         conn.commit()
 
@@ -172,6 +173,36 @@ def get_sound_anomalies(robot_id: int):
 
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Failed to retrieve sound anomalies: {str(e)}")
+    finally:
+        cursor.close()
+        conn.close()
+
+@sensor_router.get("/{robot_id}/data")
+def get_sensor_data(robot_id: int):
+    conn = connect_db()
+    cursor = conn.cursor()
+    try:
+        cursor.execute(
+            "SELECT temperature_readings, sound_anomalies FROM robots WHERE id = %s;",
+            (robot_id,)
+        )
+        result = cursor.fetchone()
+        if not result:
+            raise HTTPException(status_code=404, detail="Robot not found")
+
+        temp_readings = json.loads(result[0] or "[]")
+        sound_anomalies = json.loads(result[1] or "[]")
+        average_temp = sum(r[1] for r in temp_readings) / len(temp_readings) if temp_readings else 0
+
+        return {
+            "robot_id": robot_id,
+            "temperature_readings": temp_readings,
+            "average_temperature": average_temp,
+            "sound_anomalies": sound_anomalies,
+            "sound_anomaly_count": len(sound_anomalies)
+        }
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Failed to fetch sensor data: {str(e)}")
     finally:
         cursor.close()
         conn.close()

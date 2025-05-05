@@ -11,58 +11,56 @@ from images import get_presigned_url_v2
 
 notifications_router = APIRouter()
 
-# optimize later with pagination or filtering
-# TODO add clips support later
 @notifications_router.get("/user/{user_uuid}")
 def get_user_notification(user_uuid: str):
-    # connect to db
     conn = connect_db()
     cursor = conn.cursor()
-
-    # user user_id as the filter
     try:
-        query = "SELECT id FROM users WHERE cognito_sub = %s"
-        cursor.execute(query, (user_uuid,))
-        data = cursor.fetchall()
+        # Get user_id from cognito_sub
+        cursor.execute("SELECT id FROM users WHERE cognito_sub = %s", (user_uuid,))
+        user = cursor.fetchone()
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
 
-        user_id = data[0][0]  # extract id
-        print(user_id)
+        user_id = user[0]
+        print(f"user_id: {user_id}")
 
-        query = """
-            SELECT notification_id, s3_filename, timestamp, media_type 
+        # Fetch notifications
+        cursor.execute("""
+            SELECT notification_id, s3_filename, timestamp, media_type, event_type 
             FROM notifications 
             WHERE user_id = %s
-        """
-        cursor.execute(query,(user_id,))
+            ORDER BY timestamp DESC
+        """, (user_id,))
         rows = cursor.fetchall()
-        print(f"Fetched {len(rows)} rows")  # Debug log
+        print(f"Fetched {len(rows)} notifications")
 
         if not rows:
-            print("User doesn't exist")
-            return None
-        
+            return {"notifications": []}
+
         notifications = []
-
-
         for row in rows:
-            notification_id, s3_filename, timestamp, media_type = row
+            notification_id, s3_filename, timestamp, media_type, event_type = row
             presigned_url = None
-        # return all the notifications along with file path 
+
+            # Only generate URL if s3_filename is not empty
             if s3_filename:
                 presigned_url = get_presigned_url_v2(s3_filename)
-            print(f"{notification_id}")
+
             notifications.append({
                 "id": notification_id,
                 "s3_filename": s3_filename,
                 "file_url": presigned_url,
                 "timestamp": timestamp,
-                "media_type": media_type
+                "media_type": media_type,
+                "event_type": event_type
             })
 
-        return notifications
+        return {"notifications": notifications}
+
     except Exception as e:
-        print(f"str{e}")
-        raise HTTPException(status_code=500, detail = "error fetching notifications")
+        print(f"Error: {e}")
+        raise HTTPException(status_code=500, detail="Error fetching notifications")
     finally:
         cursor.close()
         conn.close()
