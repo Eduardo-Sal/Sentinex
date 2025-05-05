@@ -12,6 +12,9 @@ from datetime import datetime
 class TemperaturePayload(BaseModel):
     temperature: float
 
+class SoundPayload(BaseModel):
+    db_level: float
+
 class DevicePair(BaseModel):
     user_uuid: constr(min_length=36, max_length=36)
     robot_id: conint(gt=0)
@@ -262,6 +265,80 @@ def update_temperature(robot_id: int, payload: TemperaturePayload):
     except Exception as e:
         conn.rollback()
         raise HTTPException(status_code=400, detail=f"Failed to update temperature: {str(e)}")
+    finally:
+        cursor.close()
+        conn.close()
+
+
+@robots_router.post("/{robot_id}/sound")
+def update_sound_anomaly(robot_id: int, payload: SoundPayload):
+    '''
+    Adds a (timestamp, db_level) tuple to sound_anomalies column.
+    '''
+    conn = connect_db()
+    cursor = conn.cursor()
+    try:
+        # Get current sound anomalies
+        cursor.execute("SELECT sound_anomalies FROM robots WHERE id = %s;", (robot_id,))
+        result = cursor.fetchone()
+        if not result:
+            raise HTTPException(status_code=404, detail="Robot not found")
+
+        anomalies = json.loads(result[0] or "[]")
+
+        # Append new anomaly with timestamp
+        timestamp = datetime.utcnow().isoformat() + "Z"
+        anomalies.append([timestamp, payload.db_level])
+
+        # Save back to DB
+        cursor.execute(
+            "UPDATE robots SET sound_anomalies = %s WHERE id = %s;",
+            (json.dumps(anomalies), robot_id)
+        )
+        conn.commit()
+
+        # Optionally insert a notification
+        cursor.execute(
+            """
+            INSERT INTO notifications (user_id, robot_id, s3_filename, media_type)
+            SELECT user_id, %s, %s, %s FROM robots WHERE id = %s;
+            """,
+            (robot_id, 'sound_anomaly', 'sound', robot_id)
+        )
+        conn.commit()
+
+        return {
+            "success": True,
+            "robot_id": robot_id,
+            "updated_anomalies": anomalies
+        }
+
+    except Exception as e:
+        conn.rollback()
+        raise HTTPException(status_code=400, detail=f"Failed to update sound anomaly: {str(e)}")
+    finally:
+        cursor.close()
+        conn.close()
+
+
+@robots_router.get("/{robot_id}/sound")
+def get_sound_anomalies(robot_id: int):
+    '''
+    Retrieves all sound anomalies for the robot.
+    '''
+    conn = connect_db()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT sound_anomalies FROM robots WHERE id = %s;", (robot_id,))
+        result = cursor.fetchone()
+        if not result:
+            raise HTTPException(status_code=404, detail="Robot not found")
+
+        anomalies = json.loads(result[0] or "[]")
+        return {"robot_id": robot_id, "sound_anomalies": anomalies}
+
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Failed to retrieve sound anomalies: {str(e)}")
     finally:
         cursor.close()
         conn.close()
