@@ -27,7 +27,7 @@ def get_user_notification(user_uuid: str):
 
         # Fetch notifications
         cursor.execute("""
-            SELECT notification_id, s3_filename, timestamp, media_type, event_type 
+            SELECT notification_id, s3_filename, timestamp, media_type, event_type, db_level 
             FROM notifications 
             WHERE user_id = %s
             ORDER BY timestamp DESC
@@ -40,7 +40,7 @@ def get_user_notification(user_uuid: str):
 
         notifications = []
         for row in rows:
-            notification_id, s3_filename, timestamp, media_type, event_type = row
+            notification_id, s3_filename, timestamp, media_type, event_type, db_level = row
             presigned_url = None
 
             # Only generate URL if s3_filename is not empty
@@ -53,7 +53,8 @@ def get_user_notification(user_uuid: str):
                 "file_url": presigned_url,
                 "timestamp": timestamp,
                 "media_type": media_type,
-                "event_type": event_type
+                "event_type": event_type,
+                "db_level": db_level 
             })
 
         return {"notifications": notifications}

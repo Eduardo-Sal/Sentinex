@@ -38,7 +38,7 @@ def update_temperature(robot_id: int, payload: TemperaturePayload):
         index = result[1] or 0
 
         # Create timestamp
-        timestamp = datetime.utcnow().isoformat() + "Z"
+        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
 
         # Expand array if not full
         if len(readings) < 12:
@@ -120,26 +120,20 @@ def update_sound_anomaly(robot_id: int, payload: SoundPayload):
         anomalies = json.loads(result[0] or "[]")
         user_id = result[1]
 
-        # Append new anomaly with timestamp
-        timestamp = datetime.utcnow().isoformat() + "Z"
+        # Append new anomaly with timestamp (use local time in readable format)
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         anomalies.append([timestamp, payload.db_level])
 
-        # Save back to DB
+        # Insert notification with db_level in its own column and local time timestamp
         cursor.execute(
-            "UPDATE robots SET sound_anomalies = %s WHERE id = %s;",
-            (json.dumps(anomalies), robot_id)
+            """
+            INSERT INTO notifications (user_id, robot_id, s3_filename, timestamp, media_type, event_type, db_level)
+            VALUES (%s, %s, %s, %s, %s, %s, %s);
+            """,
+            (user_id, robot_id, '', timestamp, 'sound', 'sound_anomaly', payload.db_level)
         )
         conn.commit()
 
-        # Insert notification (s3_filename = '', media_type = 'sound', event_type = 'sound_anomaly')
-        cursor.execute(
-            """
-            INSERT INTO notifications (user_id, robot_id, s3_filename, media_type, event_type)
-            VALUES (%s, %s, %s, %s, %s);
-            """,
-            (user_id, robot_id, '', 'sound', 'sound_anomaly')
-        )
-        conn.commit()
 
         return {
             "success": True,
@@ -153,7 +147,6 @@ def update_sound_anomaly(robot_id: int, payload: SoundPayload):
     finally:
         cursor.close()
         conn.close()
-
 
 @sensor_router.get("/{robot_id}/sound")
 def get_sound_anomalies(robot_id: int):
