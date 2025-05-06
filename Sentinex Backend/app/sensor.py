@@ -38,7 +38,7 @@ def update_temperature(robot_id: int, payload: TemperaturePayload):
         index = result[1] or 0
 
         # Create timestamp
-        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         # Expand array if not full
         if len(readings) < 12:
@@ -196,6 +196,54 @@ def get_sensor_data(robot_id: int):
         }
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Failed to fetch sensor data: {str(e)}")
+    finally:
+        cursor.close()
+        conn.close()
+
+@sensor_router.get("/{robot_id}/analytics")
+def get_analytics(robot_id: int):
+    conn = connect_db()
+    cursor = conn.cursor()
+    try:
+        # Get temperature readings
+        cursor.execute("SELECT temperature_readings FROM robots WHERE id = %s;", (robot_id,))
+        result = cursor.fetchone()
+        if not result:
+            raise HTTPException(status_code=404, detail="Robot not found")
+        temp_readings = json.loads(result[0] or "[]")
+
+        temp_values = [r[1] for r in temp_readings if len(r) == 2]
+        avg_temp = round(sum(temp_values) / len(temp_values), 2) if temp_values else 0
+        max_temp = max(temp_values) if temp_values else 0
+        min_temp = min(temp_values) if temp_values else 0
+
+        # Get sound events from notifications
+        cursor.execute("""
+            SELECT timestamp, db_level FROM notifications
+            WHERE robot_id = %s AND event_type = 'sound_anomaly'
+            ORDER BY timestamp ASC;
+        """, (robot_id,))
+        sound_rows = cursor.fetchall()
+        sound_events = [{"timestamp": str(r[0]), "db_level": r[1]} for r in sound_rows]
+        sound_event_count = len(sound_events)
+
+        return {
+            "robot_id": robot_id,
+            "temperature": {
+                "average": avg_temp,
+                "max": max_temp,
+                "min": min_temp,
+                "count": len(temp_values),
+                "readings": temp_readings  # keep this if frontend needs the raw points
+            },
+            "sound": {
+                "event_count": sound_event_count,
+                "events": sound_events
+            }
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Failed to fetch analytics: {str(e)}")
     finally:
         cursor.close()
         conn.close()

@@ -51,16 +51,21 @@ def delete_user_s3_folder(user_id):
 
           
 def create_user_s3_folders(user_id):
+    """
+    Creates the base S3 folders for a new user:
+    - screenshot/
+    - clips/
+    - known_faces/
+    """
     try:
-        # Create a base folder, and subfolders which are named screenshot and video
         base_folder = f"{user_id}/"
-        subfolders = ["screenshot/","clips/"]
+        subfolders = ["screenshot/", "clips/", "known_faces/"]
         for folder in subfolders:
             key = base_folder + folder
-            s3.put_object(Bucket=s3_bucket,Key=key)
-        print(f"Folder created:{base_folder}")
+            s3.put_object(Bucket=s3_bucket, Key=key)
+        print(f"Folders created for user: {base_folder}")
     except Exception as e:
-        print(f"Failed to create folder for user {base_folder} error: {e}")
+        print(f"Failed to create folders for user {base_folder}, error: {e}")
 
 # Handle edge cases later which is if doesn't exists in cognito but exists in mysql
 @auth_router.post("/register")
