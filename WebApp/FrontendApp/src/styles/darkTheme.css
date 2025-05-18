@@ -1,0 +1,32 @@
+@layer utilities {
+  .dark-theme {
+    --bg-primary: #000000;
+    --bg-secondary: rgba(255, 255, 255, 0.05);
+    --bg-tertiary: rgba(255, 255, 255, 0.1);
+    --text-primary: #ffffff;
+    --text-secondary: rgba(255, 255, 255, 0.7);
+    --text-tertiary: rgba(255, 255, 255, 0.5);
+    --border-color: rgba(255, 255, 255, 0.1);
+    --accent-color: #ffffff;
+  }
+
+  .dark-gradient {
+    background: linear-gradient(135deg, var(--bg-primary) 0%, #1a1a1a 100%);
+  }
+
+  .dark-card {
+    @apply bg-white/5 backdrop-blur-lg border border-white/10;
+  }
+
+  .dark-button {
+    @apply bg-white text-black hover:bg-gray-200 transition-colors;
+  }
+
+  .dark-button-outline {
+    @apply border border-white/20 text-white hover:bg-white/10 transition-colors;
+  }
+
+  .dark-input {
+    @apply bg-white/5 border border-white/10 text-white placeholder-gray-400 focus:border-white/20 focus:ring-white/20;
+  }
+}

@@ -1,0 +1,122 @@
+.arrow-container {
+  position: relative;
+  width: 220px;
+  height: 220px;
+  background-color: transparent transparent #ddd transparen;
+  border-radius: 48%;
+  margin: auto;
+}
+
+.arrow-container::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 32.6%;
+  height: 50%;
+  background-color: #000000;
+  border-radius: 0%;
+  transform: translate(-50%, -50%);
+  z-index: 1;
+}
+
+/* Shared styles for all arrow buttons */
+.arrow-button {
+  position: absolute;
+  background-color: #000000;
+  cursor: pointer;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Triangle arrow */
+.arrow-button::before {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  transition: border-color 0.2s;
+}
+
+/* UP button */
+#arrow-up {
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 33%;
+  height: 43%;
+  border-radius: 17% 17% 50% 50%;
+}
+#arrow-up::before {
+  top: 40%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border-width: 0 13px 19px 13px;
+  border-color: transparent transparent #ddd transparent;
+}
+#arrow-up:active::before {
+  border-bottom-color: #000;
+}
+
+/* DOWN button */
+#arrow-down {
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 33%;
+  height: 43%;
+  border-radius: 50% 50% 17% 17%;
+}
+#arrow-down::before {
+  bottom: 40%;
+  left: 50%;
+  transform: translate(-50%, 50%);
+  border-width: 19px 13px 0 13px;
+  border-color: #ddd transparent transparent transparent;
+}
+#arrow-down:active::before {
+  border-top-color: #000;
+}
+
+/* LEFT button */
+#arrow-left {
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
+  width: 43%;
+  height: 33%;
+  border-radius: 17% 50% 50% 17%;
+}
+#arrow-left::before {
+  top: 50%;
+  left: 40%;
+  transform: translate(-50%, -50%);
+  border-width: 13px 19px 13px 0;
+  border-color: transparent #ddd transparent transparent;
+}
+#arrow-left:active::before {
+  border-right-color: #000;
+}
+
+/* RIGHT button */
+#arrow-right {
+  top: 50%;
+  right: 0;
+  transform: translateY(-50%);
+  width: 43%;
+  height: 33%;
+  border-radius: 50% 17% 17% 50%;
+}
+#arrow-right::before {
+  top: 50%;
+  right: 40%;
+  transform: translate(50%, -50%);
+  border-width: 13px 0 13px 19px;
+  border-color: transparent transparent transparent #ddd;
+}
+#arrow-right:active::before {
+  border-left-color: #000;
+}
