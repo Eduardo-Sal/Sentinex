@@ -1,7 +1,31 @@
+# Sensitive files
 *.env
-__pycache__
-tests
-__init__.py
-.pytest_cache
-testingVideo
-Sentinex Backend/app/test.py
+
+# Python cache and temp
+__pycache__/
+.pytest_cache/
+*.py[cod]
+*.pyo
+*.pyd
+
+# JS/Node junk
+node_modules/
+dist/
+build/
+*.log
+
+# System files
+.DS_Store
+Thumbs.db
+
+# VSCode and IDE settings
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Temp folders
+testingVideo/
