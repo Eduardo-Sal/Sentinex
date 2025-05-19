@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://ros.org/wiki/xacro" name="robot">
+
+  <gazebo>
+    <plugin name="ignition::gazebo::systems::DiffDrive"
+            filename="libignition-gazebo-diff-drive-system.so">
+
+      <!-- Wheel Joints -->
+      <left_joint>left_wheel_joint</left_joint>
+      <right_joint>right_wheel_joint</right_joint>
+
+      <!-- Physical Properties -->
+      <wheel_separation>0.4</wheel_separation>
+      <wheel_radius>0.08</wheel_radius>
+
+      <!-- Torque and acceleration limits -->
+      <max_torque>200.0</max_torque>
+      <max_acceleration>10.0</max_acceleration>
+
+      <!-- ROS 2 Topic to listen for velocity commands -->
+      <topic>/model/my_bot/Motor_Control</topic>
+
+      <!-- Frames -->
+      <odom_frame>odom</odom_frame>
+      <base_frame>base_link</base_frame>
+
+      <!-- Optional outputs -->
+      <publish_odom>true</publish_odom>
+      <publish_odom_tf>true</publish_odom_tf>
+      <publish_wheel_tf>true</publish_wheel_tf>
+    </plugin>
+  </gazebo>
+
+</robot>
