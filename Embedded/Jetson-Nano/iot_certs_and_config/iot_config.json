@@ -1,0 +1,11 @@
+{
+  "endpoint": "<MQTT_ID>-ats.iot.us-east-2.amazonaws.com",
+  "rootCAPath": "/home/asmr/robot_ws/iot_certs_and_config/rootCA.crt",
+  "certificatePath": "/home/asmr/robot_ws/iot_certs_and_config/robot-<ROBOT_ID>.cert.pem",
+  "privateKeyPath": "/home/asmr/robot_ws/iot_certs_and_config/robot-<ROBOT_ID>.private.key",
+  "port": 8883,
+  "clientID": "robot-<ROBOT_ID>",
+  "region": "us-east-2",
+  "retryWaitTime": 5,
+  "retryAttempts": 10
+}

@@ -1,0 +1,42 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "iot:Publish",
+        "iot:Receive",
+        "iot:RetainPublish"
+      ],
+      "Resource": [
+        "arn:aws:iot:us-east-2:<ACCOUNT_ID>:topic/robot-<ROBOT_ID>/data",
+        "arn:aws:iot:us-east-2:<ACCOUNT_ID>:topic/robot-<ROBOT_ID>/camera",
+        "arn:aws:iot:us-east-2:<ACCOUNT_ID>:topic/robot-<ROBOT_ID>/direction",
+        "arn:aws:iot:us-east-2:<ACCOUNT_ID>:topic/robot-<ROBOT_ID>/mode",
+        "arn:aws:iot:us-east-2:<ACCOUNT_ID>:topic/robot-<ROBOT_ID>/alerts",
+        "arn:aws:iot:us-east-2:<ACCOUNT_ID>:topic/robot-<ROBOT_ID>/speed"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "iot:Subscribe"
+      ],
+      "Resource": [
+        "arn:aws:iot:us-east-2:<ACCOUNT_ID>:topicfilter/robot-<ROBOT_ID>/data",
+        "arn:aws:iot:us-east-2:<ACCOUNT_ID>:topicfilter/robot-<ROBOT_ID>/camera",
+        "arn:aws:iot:us-east-2:<ACCOUNT_ID>:topicfilter/robot-<ROBOT_ID>/direction",
+        "arn:aws:iot:us-east-2:<ACCOUNT_ID>:topicfilter/robot-<ROBOT_ID>/mode",
+        "arn:aws:iot:us-east-2:<ACCOUNT_ID>:topicfilter/robot-<ROBOT_ID>/alerts",
+        "arn:aws:iot:us-east-2:<ACCOUNT_ID>:topicfilter/robot-<ROBOT_ID>/speed"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "iot:Connect"
+      ],
+      "Resource": "arn:aws:iot:us-east-2:<ACCOUNT_ID>:client/robot-<ROBOT_ID>"
+    }
+  ]
+}
