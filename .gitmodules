@@ -1,0 +1,15 @@
+[submodule "Embedded/Jetson-Nano/robot_ws/asmr_ros"]
+	path = Embedded/Jetson-Nano/robot_ws/asmr_ros
+	url = https://github.com/Eduardo-Sal/A-ASMR
+[submodule "Embedded/Jetson-Nano/robot_ws/micro_ros_setup"]
+	path = Embedded/Jetson-Nano/robot_ws/micro_ros_setup
+	url = https://github.com/Eduardo-Sal/A-ASMR
+[submodule "Embedded/Jetson-Nano/robot_ws/sllidar_ros2"]
+	path = Embedded/Jetson-Nano/robot_ws/sllidar_ros2
+	url = https://github.com/Eduardo-Sal/A-ASMR
+[submodule "Embedded/Jetson-Nano/robot_ws/uros/micro-ROS-Agent"]
+	path = Embedded/Jetson-Nano/robot_ws/uros/micro-ROS-Agent
+	url = https://github.com/Eduardo-Sal/A-ASMR
+[submodule "Embedded/Jetson-Nano/robot_ws/uros/micro-ROS-msgs"]
+	path = Embedded/Jetson-Nano/robot_ws/uros/micro-ROS-msgs
+	url = https://github.com/Eduardo-Sal/A-ASMR
