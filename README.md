@@ -19,7 +19,6 @@ The Sentinex robot platform consists of:
 - RPLiDAR A1 for 360° scanning and obstacle detection
 - Jetson Nano for onboard AI inference
 - Dual ESP32 microcontrollers for motor control, sensor input, and ROS2 integration
-- Custom power system and PCB charger
 
 CAD files and design assets are located in the [`Mechanical/`](./Mechanical) folder.
 
