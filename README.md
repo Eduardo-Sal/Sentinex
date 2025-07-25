@@ -26,7 +26,7 @@ CAD files and design assets are located in the [`Mechanical/`](./Mechanical) fol
 ## System Overview
 
 <p align="center">
-  <img src="./images/aws_architecture.png" alt="AWS Architecture Diagram" width="720">
+  <img src="./images/aws_architecturee.png" alt="AWS Architecture Diagram" width="720">
 </p>
 
 
